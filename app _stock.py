@@ -2,6 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import date
+# 安裝套件
+pip install streamlit pandas plotly
+
+# 執行
+streamlit run app.py
 
 st.set_page_config(page_title="台股持股紀錄", page_icon="📈", layout="wide")
 
