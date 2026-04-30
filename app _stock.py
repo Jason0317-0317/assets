@@ -42,7 +42,6 @@ TW_STOCKS = {
 }
 
 # ── SQLite 資料庫 ──────────────────────────────────────────
-# Streamlit Cloud 可用 /tmp（重啟會消失）；本機/VPS 改成 ./data/ 永久保存
 DATA_DIR = Path(os.environ.get("STOCK_DATA_DIR", "./data"))
 DATA_DIR.mkdir(exist_ok=True)
 DB_PATH = DATA_DIR / "stocks.db"
@@ -94,8 +93,8 @@ if "edit_id" not in st.session_state:
     st.session_state.edit_id = None
 
 # ── 標題 ───────────────────────────────────────────────────
-st.markdown("## 📈 台股持股紀錄")
-st.caption(f"💾 資料儲存於：`{DB_PATH.resolve()}`")
+st.markdown("## 台股持股紀錄")
+st.caption(f"資料儲存於：`{DB_PATH.resolve()}`")
 st.markdown("---")
 
 # ── 讀取資料 ───────────────────────────────────────────────
@@ -109,10 +108,10 @@ total_sell = sell_df["net_amount"].sum() if not sell_df.empty else 0
 total_fee  = df["fee"].sum() if not df.empty else 0
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("📋 交易筆數", f"{len(df)} 筆")
-c2.metric("🟢 買入總額", f"NT$ {total_buy:,.0f}")
-c3.metric("🔴 賣出總額", f"NT$ {total_sell:,.0f}")
-c4.metric("💰 手續費合計", f"NT$ {total_fee:,.0f}")
+c1.metric("交易筆數", f"{len(df)} 筆")
+c2.metric("買入總額", f"NT$ {total_buy:,.0f}")
+c3.metric("賣出總額", f"NT$ {total_sell:,.0f}")
+c4.metric("手續費合計", f"NT$ {total_fee:,.0f}")
 
 st.markdown("---")
 
@@ -129,7 +128,7 @@ if is_editing:
     default_shares = int(edit_row["shares"])
     default_amount = float(edit_row["net_amount"])
     default_fee_v  = float(edit_row["fee"])
-    expander_label = "✏️ 編輯交易紀錄"
+    expander_label = "編輯交易紀錄"
 else:
     default_date   = date.today()
     default_code   = ""
@@ -138,42 +137,41 @@ else:
     default_shares = 0
     default_amount = 0.0
     default_fee_v  = 0.0
-    expander_label = "➕ 新增交易紀錄"
+    expander_label = "新增交易紀錄"
 
 with st.expander(expander_label, expanded=True):
     col1, col2 = st.columns(2)
 
     with col1:
-        trade_date = st.date_input("📅 交易日期", value=default_date)
-        trade_type = st.selectbox("⬆⬇ 買入／賣出", ["買入", "賣出"],
+        trade_date = st.date_input("交易日期", value=default_date)
+        trade_type = st.selectbox("買入／賣出", ["買入", "賣出"],
                                   index=0 if default_type == "買入" else 1)
-        shares = st.number_input("📊 成交股數（股）", min_value=0, value=default_shares, step=1)
+        shares = st.number_input("成交股數（股）", min_value=0, value=default_shares, step=1)
 
     with col2:
-        code_input = st.text_input("🏷️ 股票代碼", value=default_code, placeholder="如：2330")
-        # 自動帶入名稱
+        code_input = st.text_input("股票代碼", value=default_code, placeholder="如：2330")
         auto_name = TW_STOCKS.get(code_input.strip(), "")
         if auto_name:
-            st.caption(f"✅ 自動帶入：**{auto_name}**")
+            st.caption(f"自動帶入：**{auto_name}**")
             resolved_name = auto_name
         else:
             resolved_name = default_name if is_editing and not code_input != default_code else ""
             if len(code_input) >= 4:
-                st.caption("⚠️ 未收錄代碼，請手動輸入名稱")
+                st.caption("未收錄代碼，請手動輸入名稱")
 
-        stock_name = st.text_input("📛 股票名稱", value=resolved_name,
+        stock_name = st.text_input("股票名稱", value=resolved_name,
                                    placeholder="輸入代碼後自動帶入，或手動填寫")
-        net_amount = st.number_input("💵 淨收付金額（元）", min_value=0.0,
+        net_amount = st.number_input("淨收付金額（元）", min_value=0.0,
                                      value=default_amount, step=100.0, format="%.0f")
-        fee = st.number_input("💸 手續費（元）", min_value=0.0,
+        fee = st.number_input("手續費（元）", min_value=0.0,
                               value=default_fee_v, step=1.0, format="%.0f")
 
     b1, b2, _ = st.columns([1, 1, 5])
     with b1:
-        submit = st.button("💾 儲存" if is_editing else "✅ 新增",
+        submit = st.button("儲存" if is_editing else "新增",
                            use_container_width=True, type="primary")
     with b2:
-        if is_editing and st.button("❌ 取消", use_container_width=True):
+        if is_editing and st.button("取消", use_container_width=True):
             st.session_state.edit_id = None
             st.rerun()
 
@@ -190,23 +188,23 @@ with st.expander(expander_label, expanded=True):
                 update_record(edit_id, trade_date, code_input.strip(), stock_name.strip(),
                               trade_type, shares, net_amount, fee)
                 st.session_state.edit_id = None
-                st.success("✅ 已更新")
+                st.success("已更新")
             else:
                 add_record(trade_date, code_input.strip(), stock_name.strip(),
                            trade_type, shares, net_amount, fee)
-                st.success("✅ 已新增")
+                st.success("已新增")
             st.rerun()
 
 st.markdown("---")
 
 # ── 交易紀錄 ──────────────────────────────────────────────
-st.markdown("### 📋 交易紀錄")
+st.markdown("### 交易紀錄")
 df = load_records()
 
 if df.empty:
     st.info("尚無交易紀錄，請在上方表單新增。")
 else:
-    search = st.text_input("🔍 搜尋代碼或名稱", placeholder="輸入關鍵字...")
+    search = st.text_input("搜尋代碼或名稱", placeholder="輸入關鍵字...")
     disp = df.copy()
     if search:
         disp = disp[disp["code"].str.contains(search, na=False) |
@@ -220,7 +218,6 @@ else:
 
     st.dataframe(show.reset_index(drop=True), use_container_width=True, hide_index=True)
 
-    # 編輯 / 刪除
     st.markdown("**操作：**")
     for _, row in disp.iterrows():
         r1, r2, r3 = st.columns([6, 1, 1])
@@ -230,18 +227,18 @@ else:
                 f"{row['trade_type']}　{int(row['shares']):,}股　NT${row['net_amount']:,.0f}"
             )
         with r2:
-            if st.button("✏️", key=f"e{row['id']}", help="編輯", use_container_width=True):
+            if st.button("編輯", key=f"e{row['id']}", use_container_width=True):
                 st.session_state.edit_id = int(row["id"])
                 st.rerun()
         with r3:
-            if st.button("🗑️", key=f"d{row['id']}", help="刪除", use_container_width=True):
+            if st.button("刪除", key=f"d{row['id']}", use_container_width=True):
                 delete_record(int(row["id"]))
                 st.rerun()
 
 st.markdown("---")
 
 # ── 圓餅圖 ────────────────────────────────────────────────
-st.markdown("### 🥧 買入持股分布")
+st.markdown("### 買入持股分布")
 df = load_records()
 buy_df = df[df["trade_type"] == "買入"] if not df.empty else pd.DataFrame()
 
@@ -275,7 +272,6 @@ else:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # 明細表
     total = pie[val_col].sum()
     pie["佔比"] = (pie[val_col] / total * 100).map(lambda x: f"{x:.1f}%")
     if chart_mode == "金額":
@@ -289,14 +285,14 @@ else:
 
 # ── 匯出 CSV ──────────────────────────────────────────────
 st.markdown("---")
-st.markdown("### 📥 匯出資料")
+st.markdown("### 匯出資料")
 df = load_records()
 if not df.empty:
     csv = df.drop(columns=["id"]).rename(columns={
         "trade_date":"交易日期","code":"代碼","name":"名稱",
         "trade_type":"類型","shares":"股數","net_amount":"淨收付金額","fee":"手續費"
     }).to_csv(index=False, encoding="utf-8-sig")
-    st.download_button("⬇️ 下載 CSV", data=csv,
+    st.download_button("下載 CSV", data=csv,
                        file_name="台股持股紀錄.csv", mime="text/csv")
 else:
     st.caption("尚無資料可匯出")
